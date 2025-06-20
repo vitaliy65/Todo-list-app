@@ -15,11 +15,13 @@ export interface List {
   title: string;
   ownerId: string; // той самий userId, який має роль admin
   participants: Participant[]; // масив учасників (включно з owner)
+  color: string; // Додано поле кольору
+  createdAt: string; // Додано поле дати створення
 }
 
 export interface Task {
   id: string;
-  listId: string; // зв’язок з List.id
+  listId: string; // зв'язок з List.id
   title: string;
   description?: string;
   isCompleted: boolean;

@@ -7,6 +7,7 @@ import {
   editList,
 } from "@/store/slices/listsSlice";
 import { useAppSelector } from "@/store/hooks";
+import { useCallback } from "react";
 
 export const useList = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,21 +15,33 @@ export const useList = () => {
     (state: RootState) => state.lists
   );
 
-  const handleFetchLists = (ownerId: string) => {
-    dispatch(fetchLists({ ownerId }));
-  };
+  const handleFetchLists = useCallback(
+    (ownerId: string) => {
+      dispatch(fetchLists({ ownerId }));
+    },
+    [dispatch]
+  );
 
-  const handleCreateList = (title: string, ownerId: string) => {
-    dispatch(createList({ title, ownerId }));
-  };
+  const handleCreateList = useCallback(
+    (title: string, ownerId: string) => {
+      dispatch(createList({ title, ownerId }));
+    },
+    [dispatch]
+  );
 
-  const handleDeleteList = (id: string) => {
-    dispatch(deleteList({ id }));
-  };
+  const handleDeleteList = useCallback(
+    (id: string) => {
+      dispatch(deleteList({ id }));
+    },
+    [dispatch]
+  );
 
-  const handleEditList = (id: string, title: string) => {
-    dispatch(editList({ id, title }));
-  };
+  const handleEditList = useCallback(
+    (id: string, title: string) => {
+      dispatch(editList({ id, title }));
+    },
+    [dispatch]
+  );
 
   return {
     lists,
