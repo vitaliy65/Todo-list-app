@@ -54,6 +54,14 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
     handleDeleteTask(taskId);
   };
 
+  const onEditTask = (
+    taskId: string,
+    newTitle: string,
+    newDescription: string
+  ) => {
+    handleEditTask(taskId, newTitle, newDescription, undefined);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="mx-auto max-w-2xl">
@@ -111,6 +119,7 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
                       task={task}
                       onToggle={onToggleTask}
                       onDelete={onDeleteTask}
+                      onEdit={onEditTask}
                     />
                   ))}
               </div>
