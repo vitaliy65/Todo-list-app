@@ -15,7 +15,12 @@ export default function TaskPage({
 }) {
   const { id } = React.use(params);
   const router = useRouter();
-  const { lists, isPending: isListsPending, errors: listErrors } = useList();
+  const {
+    lists,
+    isPending: isListsPending,
+    errors: listErrors,
+    handleFetchLists,
+  } = useList();
   const { auth } = useAuth();
   const {
     tasks,
@@ -26,6 +31,12 @@ export default function TaskPage({
   const [selectedList, setSelectedList] = React.useState<List | undefined>(
     undefined
   );
+
+  useEffect(() => {
+    if (auth.id) {
+      handleFetchLists(auth.id);
+    }
+  }, [auth.id, handleFetchLists]);
 
   useEffect(() => {
     if (lists.length > 0) {
@@ -48,7 +59,7 @@ export default function TaskPage({
     router.back();
   }, [router]);
 
-  const isLoading = isListsPending || isTasksPending;
+  const isLoading = auth.isPending || isListsPending || isTasksPending;
   const errors = [...listErrors, ...taskErrors];
 
   if (isLoading) {
@@ -63,7 +74,7 @@ export default function TaskPage({
     );
   }
 
-  if (!selectedList) {
+  if (!selectedList && !isLoading && !auth.isPending) {
     return <div className="text-center p-8">Список не найден.</div>;
   }
 
