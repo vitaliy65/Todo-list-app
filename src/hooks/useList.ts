@@ -5,6 +5,7 @@ import {
   createList,
   deleteList,
   editList,
+  shareList,
 } from "@/store/slices/listsSlice";
 import { useAppSelector } from "@/store/hooks";
 import { useCallback } from "react";
@@ -43,6 +44,13 @@ export const useList = () => {
     [dispatch]
   );
 
+  const handleShareList = useCallback(
+    async (listId: string, email: string, role: "admin" | "viewer") => {
+      await dispatch(shareList({ listId, email, role }));
+    },
+    [dispatch]
+  );
+
   return {
     lists,
     isPending,
@@ -51,5 +59,6 @@ export const useList = () => {
     handleCreateList,
     handleDeleteList,
     handleEditList,
+    handleShareList,
   };
 };

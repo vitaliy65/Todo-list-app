@@ -1,4 +1,4 @@
-import { List } from "@/types/types";
+import { List, User } from "@/types/types";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { db } from "@/lib/firebaseConfig";
 import {
@@ -95,6 +95,59 @@ const editList = createAsyncThunk<
   }
 });
 
+const shareList = createAsyncThunk<
+  List,
+  { listId: string; email: string; role: "admin" | "viewer" },
+  { rejectValue: string[] }
+>("list/shareList", async ({ listId, email, role }, { rejectWithValue }) => {
+  try {
+    const usersRef = collection(db, "users");
+    const userQuery = query(usersRef, where("email", "==", email));
+    const userSnapshot = await getDocs(userQuery);
+
+    if (userSnapshot.empty) {
+      return rejectWithValue([
+        "Користувача з такою електронною поштою не знайдено.",
+      ]);
+    }
+
+    const foundUser = userSnapshot.docs[0].data() as User;
+
+    const listRef = doc(db, "lists", listId);
+    const listSnap = await getDoc(listRef);
+
+    if (!listSnap.exists()) {
+      return rejectWithValue(["Список не знайдено."]);
+    }
+
+    const existingList = listSnap.data() as List;
+    const updatedParticipants = [...existingList.participants];
+    const participantIndex = updatedParticipants.findIndex(
+      (p) => p.userId === foundUser.id
+    );
+
+    if (participantIndex !== -1) {
+      if (updatedParticipants[participantIndex].role !== role) {
+        updatedParticipants[participantIndex] = { userId: foundUser.id, role };
+      }
+    } else {
+      updatedParticipants.push({ userId: foundUser.id, role });
+    }
+
+    await updateDoc(listRef, {
+      participants: updatedParticipants,
+    });
+
+    return { ...existingList, participants: updatedParticipants };
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error
+        ? e.message
+        : "Невідома помилка під час надання доступу.";
+    return rejectWithValue([message]);
+  }
+});
+
 const initialState: { isPending: boolean; errors: string[]; lists: List[] } = {
   isPending: false,
   errors: [],
@@ -168,9 +221,30 @@ const listsSlice = createSlice({
       .addCase(editList.rejected, (state, action) => {
         state.isPending = false;
         state.errors = action.payload || ["Помилка редагування списку"];
+      })
+
+      .addCase(shareList.pending, (state) => {
+        state.isPending = true;
+        state.errors = [];
+      })
+      .addCase(shareList.fulfilled, (state, action) => {
+        state.isPending = false;
+        state.errors = [];
+        const index = state.lists.findIndex(
+          (list) => list.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.lists = state.lists.map((list) =>
+            list.id === action.payload.id ? action.payload : list
+          );
+        }
+      })
+      .addCase(shareList.rejected, (state, action) => {
+        state.isPending = false;
+        state.errors = action.payload || ["Помилка надання доступу до списку"];
       });
   },
 });
 
-export { fetchLists, createList, deleteList, editList };
+export { fetchLists, createList, deleteList, editList, shareList };
 export default listsSlice.reducer;

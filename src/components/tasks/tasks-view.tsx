@@ -117,9 +117,11 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
                     <TaskItem
                       key={task.id}
                       task={task}
+                      participants={selectedList.participants}
                       onToggle={onToggleTask}
                       onDelete={onDeleteTask}
                       onEdit={onEditTask}
+                      currentUserId={auth.id}
                     />
                   ))}
               </div>
