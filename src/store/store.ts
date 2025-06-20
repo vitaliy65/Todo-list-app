@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import listsReducer from "./slices/listsSlice";
-// import tasksReducer from "./slices/tasksSlice";
+import tasksReducer from "./slices/tasksSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     lists: listsReducer,
-    // tasks: tasksReducer,
+    tasks: tasksReducer,
   },
 });
 
