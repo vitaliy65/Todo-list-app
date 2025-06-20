@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { Task } from "@/types/types"; // Assuming Task is also in types.ts
 import Loading from "@/components/Loading";
+import { useRouter } from "next/navigation";
 
 export function TodoListsView() {
   const {
@@ -20,6 +21,7 @@ export function TodoListsView() {
     handleEditList,
   } = useList();
   const { auth } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (auth.id) {
@@ -42,6 +44,7 @@ export function TodoListsView() {
     // setSelectedListId(listId);
     // TODO: Navigate to tasks view for this listId
     console.log("Selected list:", listId);
+    router.push(`/tasks/${listId}`);
   };
 
   if (isPending) {
