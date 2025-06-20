@@ -37,8 +37,8 @@ export const useList = () => {
   );
 
   const handleEditList = useCallback(
-    (id: string, title: string) => {
-      dispatch(editList({ id, title }));
+    async (id: string, title: string) => {
+      await dispatch(editList({ id, title }));
     },
     [dispatch]
   );

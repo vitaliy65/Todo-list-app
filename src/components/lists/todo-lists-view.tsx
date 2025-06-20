@@ -17,6 +17,7 @@ export function TodoListsView() {
     handleFetchLists,
     handleCreateList,
     handleDeleteList,
+    handleEditList,
   } = useList();
   const { auth } = useAuth();
 
@@ -71,6 +72,7 @@ export function TodoListsView() {
               stats={getListStats(list.id)}
               onSelect={handleSelectList}
               onDelete={handleDeleteList}
+              onEdit={handleEditList}
             />
           ))}
         </div>

@@ -87,7 +87,8 @@ const editList = createAsyncThunk<
     await updateDoc(listRef, {
       title: title,
     });
-    return { ...existingList, title: title };
+
+    return { ...existingList, id, title: title };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Невідома помилка";
     return rejectWithValue([message]);
@@ -159,7 +160,9 @@ const listsSlice = createSlice({
           (list) => list.id === action.payload.id
         );
         if (index !== -1) {
-          state.lists[index] = action.payload;
+          state.lists = state.lists.map((list) =>
+            list.id === action.payload.id ? action.payload : list
+          );
         }
       })
       .addCase(editList.rejected, (state, action) => {
