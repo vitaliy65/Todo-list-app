@@ -9,7 +9,7 @@ interface FormInputProps<T> {
   error?: FieldError;
 }
 
-export default function FormRegisterInput<T>({
+export default function FormInput<T>({
   label,
   id,
   type = "text",

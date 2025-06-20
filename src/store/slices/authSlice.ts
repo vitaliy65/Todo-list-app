@@ -1,5 +1,5 @@
 import { User } from "@/types/types";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { auth, db } from "@/lib/firebaseConfig";
 import { setDoc, doc } from "firebase/firestore";
 import {
@@ -70,6 +70,7 @@ const registerUser = createAsyncThunk<
   "auth/registerUser",
   async ({ name, email, password }, { rejectWithValue }) => {
     try {
+      console.log("asd");
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName: name });
@@ -121,7 +122,16 @@ const initialState: AuthState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    setAuthStateFromLocalStorage: (state, action: PayloadAction<AuthState>) => {
+      state.id = action.payload.id;
+      state.name = action.payload.name;
+      state.email = action.payload.email;
+      state.token = action.payload.token;
+      state.errors = action.payload.errors;
+      state.isPending = action.payload.isPending;
+    },
+  },
   extraReducers: (builder) => {
     builder
       //   auth user by token
@@ -195,4 +205,5 @@ const authSlice = createSlice({
 });
 
 export { authUser, loginUser, registerUser, logoutUser };
+export const { setAuthStateFromLocalStorage } = authSlice.actions;
 export default authSlice.reducer;

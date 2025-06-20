@@ -11,5 +11,10 @@ export const store = configureStore({
   },
 });
 
+// Save to localStorage whenever state changes
+store.subscribe(() => {
+  localStorage.setItem("authState", JSON.stringify(store.getState().auth));
+});
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

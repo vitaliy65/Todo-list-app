@@ -3,13 +3,13 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
-import FormRegisterInput from "./FormRegisterInput";
+import { useRouter } from "next/navigation";
+import FormInput from "../FormInput";
 
 interface RegisterInputs {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
 }
 
 export default function RegisterForm() {
@@ -20,11 +20,17 @@ export default function RegisterForm() {
     formState: { errors },
     reset,
   } = useForm<RegisterInputs>();
+  const router = useRouter();
 
   const onSubmit = async (data: RegisterInputs) => {
-    if (data.password !== data.confirmPassword) return;
-    await registerUser(data.name, data.email, data.password);
-    reset();
+    if (!data.password) return;
+    try {
+      await registerUser(data.name, data.email, data.password);
+      reset();
+      router.push("/login");
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
   };
 
   return (
@@ -35,21 +41,21 @@ export default function RegisterForm() {
       <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-4">
         Реєстрація
       </h2>
-      <FormRegisterInput
+      <FormInput
         label="name"
         id="name"
         type="text"
         register={register("name", { required: "Введіть ім'я" })}
         error={errors.name}
       />
-      <FormRegisterInput
+      <FormInput
         label="email"
         id="email"
         type="email"
         register={register("email", { required: "Введіть email" })}
         error={errors.email}
       />
-      <FormRegisterInput
+      <FormInput
         label="password"
         id="password"
         type="password"
