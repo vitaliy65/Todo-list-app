@@ -5,37 +5,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { CreateTaskForm } from "@/components/tasks/Create-task-form";
 import { TaskItem } from "@/components/tasks/Task-item";
-import type { List } from "@/types/types";
-import { useTask } from "@/hooks/useTask";
+import type { List, Task } from "@/types/types";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useTask } from "@/hooks/useTask";
 
 interface TasksViewProps {
   selectedList: List;
   onBack: () => void;
+  tasks: Task[];
+  isPending: boolean;
+  errors: string[];
 }
 
-export function TasksView({ selectedList, onBack }: TasksViewProps) {
-  const {
-    tasks,
-    isPending,
-    errors,
-    handleFetchTasks,
-    handleCreateTask,
-    handleDeleteTask,
-    handleEditTask,
-  } = useTask();
+export function TasksView({
+  selectedList,
+  onBack,
+  tasks,
+  isPending,
+  errors,
+}: TasksViewProps) {
+  const { handleCreateTask, handleDeleteTask, handleEditTask } = useTask();
   const { auth } = useAuth();
-
-  useEffect(() => {
-    if (selectedList.id && auth.id) {
-      handleFetchTasks(auth.id);
-    }
-  }, [selectedList.id, auth.id, handleFetchTasks]);
-
-  const completedCount = tasks.filter((task) => task.isCompleted).length;
-  const totalCount = tasks.length;
 
   const onCreateTask = (title: string, description: string) => {
     if (auth.id) {
@@ -62,6 +52,8 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
     handleEditTask(taskId, newTitle, newDescription, undefined);
   };
 
+  const filteredTasks = tasks.filter((task) => task.listId === selectedList.id);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="mx-auto max-w-2xl">
@@ -80,15 +72,16 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
               <h1 className="text-4xl font-bold text-gray-900">
                 {selectedList.title}
               </h1>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {completedCount}/{totalCount} выполнено
-              </Badge>
             </div>
             <p className="text-gray-600">Управляйте задачами в этом списке</p>
           </div>
         </div>
 
-        <CreateTaskForm onCreateTask={onCreateTask} />
+        <CreateTaskForm
+          onCreateTask={onCreateTask}
+          participants={selectedList.participants}
+          currentUserId={auth.id}
+        />
 
         <Card className="shadow-lg">
           <CardHeader>
@@ -103,7 +96,7 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
               <div className="p-8 text-center text-red-500">
                 <p>Ошибка: {errors.join(", ")}</p>
               </div>
-            ) : tasks.length === 0 ? (
+            ) : filteredTasks.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium mb-2">Пока нет задач</p>
@@ -111,39 +104,21 @@ export function TasksView({ selectedList, onBack }: TasksViewProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-4 divide-y divide-gray-200 ">
-                {tasks
-                  .filter((task) => task.listId === selectedList.id)
-                  .map((task) => (
-                    <TaskItem
-                      key={task.id}
-                      task={task}
-                      participants={selectedList.participants}
-                      onToggle={onToggleTask}
-                      onDelete={onDeleteTask}
-                      onEdit={onEditTask}
-                      currentUserId={auth.id}
-                    />
-                  ))}
+                {filteredTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    participants={selectedList.participants}
+                    onToggle={onToggleTask}
+                    onDelete={onDeleteTask}
+                    onEdit={onEditTask}
+                    currentUserId={auth.id}
+                  />
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
-
-        {tasks.length > 0 && (
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>
-              {completedCount === totalCount && totalCount > 0
-                ? "🎉 Все задачи выполнены! Отличная работа!"
-                : `Осталось ${totalCount - completedCount} задач${
-                    totalCount - completedCount !== 1
-                      ? totalCount - completedCount < 5
-                        ? "и"
-                        : ""
-                      : "а"
-                  }`}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

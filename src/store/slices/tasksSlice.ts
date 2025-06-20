@@ -11,19 +11,28 @@ import {
   deleteDoc,
   updateDoc,
   getDoc,
+  or,
 } from "firebase/firestore";
 
 const fetchTasks = createAsyncThunk<
   Task[],
-  { authorId: string },
+  { authorId: string; listIds?: string[] },
   { rejectValue: string[] }
->("task/fetchTasks", async ({ authorId }, { rejectWithValue }) => {
+>("task/fetchTasks", async ({ authorId, listIds }, { rejectWithValue }) => {
   try {
-    const q = query(collection(db, "tasks"), where("authorId", "==", authorId));
+    let q;
+    if (listIds && listIds.length > 0) {
+      q = query(
+        collection(db, "tasks"),
+        or(where("authorId", "==", authorId), where("listId", "in", listIds))
+      );
+    } else {
+      q = query(collection(db, "tasks"), where("authorId", "==", authorId));
+    }
     const querySnapshot = await getDocs(q);
     const tasks: Task[] = [];
     querySnapshot.forEach((doc) => {
-      tasks.push({ id: doc.id, ...doc.data() } as Task);
+      tasks.push({ id: doc.id, ...(doc.data() as Task) } as Task);
     });
     return tasks;
   } catch (e: unknown) {

@@ -12,8 +12,8 @@ export const useTask = () => {
   const { tasks, isPending, errors } = useAppSelector((state) => state.tasks);
 
   const handleFetchTasks = useCallback(
-    (authorId: string) => {
-      dispatch(fetchTasks({ authorId }));
+    (authorId: string, listIds?: string[]) => {
+      dispatch(fetchTasks({ authorId, listIds }));
     },
     [dispatch]
   );
