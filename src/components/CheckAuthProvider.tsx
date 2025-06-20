@@ -19,21 +19,16 @@ export default function CheckAuthProvider({
 
   // taking information about user from localstorage
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const serializedAuthState = localStorage.getItem("authState");
-        if (serializedAuthState) {
-          const storedState = JSON.parse(serializedAuthState);
-          dispatch(setAuthStateFromLocalStorage(storedState));
-        }
-      } catch (e) {
-        console.warn(
-          "Could not load auth state from localStorage on client",
-          e
-        );
+    try {
+      const serializedAuthState = localStorage.getItem("authState");
+      if (serializedAuthState) {
+        const storedState = JSON.parse(serializedAuthState);
+        dispatch(setAuthStateFromLocalStorage(storedState));
       }
-      setIsClientHydrated(true);
+    } catch (e) {
+      console.warn("Could not load auth state from localStorage on client", e);
     }
+    setIsClientHydrated(true);
   }, [dispatch]);
 
   // checking if token is valid

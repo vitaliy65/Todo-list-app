@@ -23,7 +23,7 @@ export default function LoginForm() {
     try {
       await login(data.email, data.password);
       reset();
-      router.push("/");
+      router.push("/lists");
     } catch (error) {
       console.error("Login failed:", error);
     }

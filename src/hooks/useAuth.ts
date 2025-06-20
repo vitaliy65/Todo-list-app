@@ -1,5 +1,5 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "@/store/store";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import {
   loginUser,
   registerUser,
@@ -7,9 +7,10 @@ import {
   authUser,
 } from "@/store/slices/authSlice";
 import { useCallback } from "react";
+import { useAppDispatch } from "@/store/hooks";
 
 export const useAuth = () => {
-  const dispatch: AppDispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const auth = useSelector((state: RootState) => state.auth);
 
   const login = useCallback(
