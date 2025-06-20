@@ -52,9 +52,5 @@ export default function CheckAuthProvider({
     return <Loading />;
   }
 
-  if (auth.id) {
-    return children;
-  }
-
-  return null;
+  return children;
 }

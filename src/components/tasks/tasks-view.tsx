@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import { CreateTaskForm } from "@/components/tasks/create-task-form";
-import { TaskItem } from "@/components/tasks/task-item";
+import { CreateTaskForm } from "@/components/tasks/Create-task-form";
+import { TaskItem } from "@/components/tasks/Task-item";
 import type { List } from "@/types/types";
 import { useTask } from "@/hooks/useTask";
 import { useAuth } from "@/hooks/useAuth";

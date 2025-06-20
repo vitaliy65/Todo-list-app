@@ -46,7 +46,7 @@ export const useList = () => {
 
   const handleShareList = useCallback(
     async (listId: string, email: string, role: "admin" | "viewer") => {
-      await dispatch(shareList({ listId, email, role }));
+      return await dispatch(shareList({ listId, email, role }));
     },
     [dispatch]
   );

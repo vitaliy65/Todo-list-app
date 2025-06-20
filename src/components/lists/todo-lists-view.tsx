@@ -1,8 +1,8 @@
 "use client";
 
 import { List as ListIcon } from "lucide-react";
-import { CreateListForm } from "./create-list-form";
-import { TodoListCard } from "./todo-lists-card";
+import { CreateListForm } from "./Create-list-form";
+import { TodoListCard } from "./Todo-lists-card";
 import { useList } from "@/hooks/useList";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -14,7 +14,6 @@ export function TodoListsView() {
   const {
     lists,
     isPending,
-    errors,
     handleFetchLists,
     handleCreateList,
     handleDeleteList,
@@ -87,14 +86,6 @@ export function TodoListsView() {
               Нет списков задач
             </h3>
             <p className="text-gray-600">Создайте свой первый список выше</p>
-          </div>
-        )}
-
-        {errors.length > 0 && (
-          <div className="text-red-500 text-center mt-4">
-            {errors.map((error, index) => (
-              <p key={index}>{error}</p>
-            ))}
           </div>
         )}
       </div>

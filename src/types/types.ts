@@ -15,6 +15,7 @@ export interface List {
   title: string;
   ownerId: string; // той самий userId, який має роль admin
   participants: Participant[]; // масив учасників (включно з owner)
+  userRole?: "admin" | "viewer"; // Роль поточного користувача в цьому списку
 }
 
 export interface Task {

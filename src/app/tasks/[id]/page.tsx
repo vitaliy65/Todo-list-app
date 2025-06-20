@@ -1,6 +1,6 @@
 "use client";
 
-import { TasksView } from "@/components/tasks/tasks-view";
+import { TasksView } from "@/components/tasks/Tasks-view";
 import React, { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useList } from "@/hooks/useList";

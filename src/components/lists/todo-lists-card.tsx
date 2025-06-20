@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Check } from "lucide-react";
+import { Trash2, Pencil, Check, Share } from "lucide-react";
 import type { List } from "@/types/types";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import ShareListModal from "./Share-list-modal";
 
 interface ListStats {
   total: number;
@@ -30,6 +31,7 @@ export function TodoListCard({
 }: TodoListCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(list.title);
+  const [openShareModel, setOpenShareModal] = useState(false);
 
   useEffect(() => {
     if (!isEditing) {
@@ -83,44 +85,51 @@ export function TodoListCard({
                 >
                   {list.title}
                 </h3>
+                {list.userRole && (
+                  <Badge variant="outline" className="ml-2 capitalize">
+                    {list.userRole}
+                  </Badge>
+                )}
               </>
             )}
           </div>
-          <div className="flex flex-row">
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isEditing) {
-                  handleSaveClick();
-                } else {
-                  handleEditClick();
-                }
-              }}
-              className="text-gray-500 hover:text-yellow-700 hover:bg-yellow-50"
-            >
-              {isEditing ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Pencil className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(list.id);
-              }}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {list.userRole !== "viewer" && (
+            <div className="flex flex-row">
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isEditing) {
+                    handleSaveClick();
+                  } else {
+                    handleEditClick();
+                  }
+                }}
+                className="text-gray-500 hover:text-yellow-700 hover:bg-yellow-50"
+              >
+                {isEditing ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Pencil className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(list.id);
+                }}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </form>
 
         <div className="space-y-2">
@@ -150,6 +159,24 @@ export function TodoListCard({
             </div>
           )}
         </div>
+        {list.userRole !== "viewer" && (
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenShareModal(true);
+            }}
+          >
+            <Share />
+          </Button>
+        )}
+
+        {openShareModel && (
+          <ShareListModal
+            listId={list.id}
+            handleClose={() => setOpenShareModal(false)}
+          />
+        )}
       </CardContent>
     </Card>
   );

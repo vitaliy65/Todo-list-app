@@ -11,6 +11,7 @@ import {
   deleteDoc,
   updateDoc,
   getDoc,
+  or,
 } from "firebase/firestore";
 
 const fetchLists = createAsyncThunk<
@@ -19,12 +20,32 @@ const fetchLists = createAsyncThunk<
   { rejectValue: string[] }
 >("list/fetchLists", async ({ ownerId }, { rejectWithValue }) => {
   try {
-    const q = query(collection(db, "lists"), where("ownerId", "==", ownerId));
+    const q = query(
+      collection(db, "lists"),
+      or(
+        where("ownerId", "==", ownerId),
+        where("participants", "array-contains", {
+          userId: ownerId,
+          role: "admin",
+        }),
+        where("participants", "array-contains", {
+          userId: ownerId,
+          role: "viewer",
+        })
+      )
+    );
     const querySnapshot = await getDocs(q);
     const lists: List[] = [];
     querySnapshot.forEach((doc) => {
-      lists.push({ id: doc.id, ...doc.data() } as List);
+      const listData = doc.data() as List;
+      const userParticipant = listData.participants.find(
+        (p) => p.userId === ownerId
+      );
+      const userRole = userParticipant ? userParticipant.role : undefined;
+
+      lists.push({ ...listData, id: doc.id, userRole } as List);
     });
+    console.log(querySnapshot);
     return lists;
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Невідома помилка";
