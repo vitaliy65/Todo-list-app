@@ -1,13 +1,16 @@
 "use client";
-import { store } from "@/store/store";
 import React, { ReactNode } from "react";
-import { Provider } from "react-redux";
 import CheckAuthProvider from "./CheckAuthProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export default function Providers({ children }: { children: ReactNode }) {
+  const quaryClient = new QueryClient();
+
   return (
-    <Provider store={store}>
+    <QueryClientProvider client={quaryClient}>
       <CheckAuthProvider>{children}</CheckAuthProvider>
-    </Provider>
+      <ReactQueryDevtools />
+    </QueryClientProvider>
   );
 }

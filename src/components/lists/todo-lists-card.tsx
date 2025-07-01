@@ -8,46 +8,47 @@ import type { List } from "@/types/types";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import ShareListModal from "./Share-list-modal";
+import { useRouter } from "next/navigation";
+import { deleteList, updateList } from "@/api/list/route";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface ListStats {
-  total: number;
-  completed: number;
-}
-
-interface TodoListCardProps {
-  list: List;
-  stats: ListStats;
-  onSelect: (listId: string) => void;
-  onDelete: (listId: string) => void;
-  onEdit: (listId: string, newTitle: string) => void;
-}
-
-export function TodoListCard({
-  list,
-  stats,
-  onSelect,
-  onDelete,
-  onEdit,
-}: TodoListCardProps) {
+export function TodoListCard({ list }: { list: List }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(list.title);
   const [openShareModel, setOpenShareModal] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!isEditing) {
-      setEditedTitle(list.title);
-    }
-  }, [list, isEditing]);
+  useEffect(() => {}, [isEditing]);
+
+  const queryClient = useQueryClient();
+  const updateListMutation = useMutation({
+    mutationFn: async ({ listId, title }: { listId: string; title: string }) =>
+      updateList({ listId, title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists"] });
+    },
+  });
+
+  const deleteListMutation = useMutation({
+    mutationFn: async (listId: string) => deleteList(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists"] });
+    },
+  });
 
   const handleEditClick = () => {
     setIsEditing(true);
   };
 
   const handleSaveClick = () => {
-    if (editedTitle.trim() !== "" && editedTitle !== list.title) {
-      onEdit(list.id, editedTitle.trim());
+    if (editedTitle.trim() !== "") {
+      updateListMutation.mutate({ listId: list.id, title: editedTitle.trim() });
     }
     setIsEditing(false);
+  };
+
+  const handleSelectList = (listId: string) => {
+    router.push(`/tasks/${listId}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -63,7 +64,7 @@ export function TodoListCard({
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
-      onClick={() => onSelect(list.id)}
+      onClick={() => handleSelectList(list.id)}
     >
       <CardContent className="p-6">
         <form className="flex items-start justify-between mb-4">
@@ -72,7 +73,7 @@ export function TodoListCard({
               <Input
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
-                onBlur={handleSaveClick}
+                onClick={(e) => e.stopPropagation()}
                 onKeyDown={handleKeyDown}
                 autoFocus
                 className="flex-grow min-w-0"
@@ -100,8 +101,8 @@ export function TodoListCard({
                 size="sm"
                 type="button"
                 onClick={(e) => {
-                  e.preventDefault();
                   e.stopPropagation();
+                  e.preventDefault();
                   if (isEditing) {
                     handleSaveClick();
                   } else {
@@ -122,7 +123,7 @@ export function TodoListCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(list.id);
+                  deleteListMutation.mutate(list.id);
                 }}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
@@ -131,34 +132,6 @@ export function TodoListCard({
             </div>
           )}
         </form>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Задач:</span>
-            <Badge variant="secondary">{stats.total}</Badge>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Выполнено:</span>
-            <Badge
-              variant="secondary"
-              className={
-                stats.completed === stats.total && stats.total > 0
-                  ? "bg-green-100 text-green-800"
-                  : ""
-              }
-            >
-              {stats.completed}/{stats.total}
-            </Badge>
-          </div>
-          {stats.total > 0 && (
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-              <div
-                className={`h-2 rounded-full bg-blue-500 transition-all duration-300`}
-                style={{ width: `${(stats.completed / stats.total) * 100}%` }}
-              ></div>
-            </div>
-          )}
-        </div>
         {list.userRole !== "viewer" && (
           <Button
             onClick={(e) => {

@@ -1,12 +1,10 @@
 "use client";
 
 import { TasksView } from "@/components/tasks/Tasks-view";
-import React, { useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useList } from "@/hooks/useList";
-import { useAuth } from "@/hooks/useAuth";
-import { useTask } from "@/hooks/useTask";
-import { List } from "@/types/types";
+import React from "react";
+import { getTasks } from "@/api/task/route";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { List, User } from "@/types/types";
 
 export default function TaskPage({
   params,
@@ -14,77 +12,28 @@ export default function TaskPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
-  const router = useRouter();
-  const {
-    lists,
-    isPending: isListsPending,
-    errors: listErrors,
-    handleFetchLists,
-  } = useList();
-  const { auth } = useAuth();
-  const {
-    tasks,
-    isPending: isTasksPending,
-    errors: taskErrors,
-    handleFetchTasks,
-  } = useTask();
-  const [selectedList, setSelectedList] = React.useState<List | undefined>(
-    undefined
-  );
+  const tasksQuery = useQuery({
+    queryKey: ["tasks"],
+    queryFn: async () => await getTasks(),
+  });
+  const queryClient = useQueryClient();
+  const user = queryClient.getQueryData(["user"]) as User;
+  const lists = queryClient.getQueryData(["lists", user.id]) as
+    | List[]
+    | undefined;
+  const selectedList = lists?.find((list: List) => list.id === id) as List;
 
-  useEffect(() => {
-    if (auth.id) {
-      handleFetchLists(auth.id);
-    }
-  }, [auth.id, handleFetchLists]);
-
-  useEffect(() => {
-    if (lists.length > 0) {
-      const foundList = lists.find((list) => list.id === id);
-      setSelectedList(foundList);
-    }
-    if (auth.id) {
-      const participantListIds = lists
-        .filter(
-          (list) =>
-            list.ownerId === auth.id ||
-            list.participants.some((p) => p.userId === auth.id)
-        )
-        .map((list) => list.id);
-      handleFetchTasks(auth.id, participantListIds);
-    }
-  }, [lists, id, auth.id, handleFetchTasks]);
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
-  const isLoading = auth.isPending || isListsPending || isTasksPending;
-  const errors = [...listErrors, ...taskErrors];
-
-  if (isLoading) {
+  if (tasksQuery.isLoading) {
     return <div className="text-center p-8">Загрузка списка и задач...</div>;
   }
 
-  if (errors.length > 0) {
+  if (tasksQuery.isError) {
     return (
       <div className="text-center p-8 text-red-500">
-        Ошибка: {errors.join(", ")}
+        {tasksQuery.error.message}
       </div>
     );
   }
 
-  if (!selectedList && !isLoading && !auth.isPending) {
-    return <div className="text-center p-8">Список не найден.</div>;
-  }
-
-  return (
-    <TasksView
-      selectedList={selectedList}
-      onBack={handleBack}
-      tasks={tasks}
-      isPending={isLoading}
-      errors={errors}
-    />
-  );
+  return <TasksView selectedList={selectedList} tasks={tasksQuery.data} />;
 }

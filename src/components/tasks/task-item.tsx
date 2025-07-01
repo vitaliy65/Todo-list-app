@@ -12,7 +12,12 @@ interface TaskItemProps {
   participants: Participant[];
   onToggle: (taskId: string) => void;
   onDelete: (taskId: string) => void;
-  onEdit: (taskId: string, newTitle: string, newDescription: string) => void;
+  onEdit: (
+    taskId: string,
+    newTitle: string,
+    newDescription: string,
+    isCompleted: boolean
+  ) => void;
   currentUserId: string;
 }
 
@@ -29,7 +34,7 @@ export function TaskItem({
   const [editedDescription, setEditedDescription] = useState(task.description);
 
   const handleSave = () => {
-    onEdit(task.id, editedTitle, editedDescription);
+    onEdit(task.id, editedTitle, editedDescription, task.isCompleted);
     setIsEditing(false);
   };
 

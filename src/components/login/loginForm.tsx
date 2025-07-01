@@ -1,8 +1,9 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import FormInput from "../FormInput";
+import { Login } from "@/api/auth/route";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface LoginInputs {
   email: string;
@@ -10,7 +11,15 @@ interface LoginInputs {
 }
 
 export default function LoginForm() {
-  const { login, auth } = useAuth();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async ({ email, password }: LoginInputs) =>
+      await Login({ email, password }),
+    onSuccess: () => {
+      console.log("User logged in successfully! ");
+      queryClient.invalidateQueries({ queryKey: ["user"], exact: true });
+    },
+  });
   const router = useRouter();
   const {
     register,
@@ -21,7 +30,7 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginInputs) => {
     try {
-      await login(data.email, data.password);
+      await mutation.mutateAsync(data);
       reset();
       router.push("/lists");
     } catch (error) {
@@ -51,19 +60,17 @@ export default function LoginForm() {
         register={register("password", { required: "Введіть пароль" })}
         error={errors.password}
       />
-      {auth.errors.length > 0 && (
+      {mutation.isError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
-          {auth.errors.map((err, idx) => (
-            <div key={idx}>{err}</div>
-          ))}
+          <div>{mutation.error.message}</div>
         </div>
       )}
       <button
         type="submit"
-        disabled={auth.isPending}
+        disabled={mutation.isPending}
         className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-60"
       >
-        {auth.isPending ? "Вхід..." : "Увійти"}
+        {mutation.isPending ? "Вхід..." : "Увійти"}
       </button>
     </form>
   );

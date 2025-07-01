@@ -2,9 +2,10 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import FormInput from "../FormInput";
+import { useMutation } from "@tanstack/react-query";
+import { Register } from "@/api/auth/route";
 
 interface RegisterInputs {
   name: string;
@@ -13,7 +14,6 @@ interface RegisterInputs {
 }
 
 export default function RegisterForm() {
-  const { register: registerUser, auth } = useAuth();
   const {
     register,
     handleSubmit,
@@ -21,13 +21,22 @@ export default function RegisterForm() {
     reset,
   } = useForm<RegisterInputs>();
   const router = useRouter();
+  const registerQuery = useMutation({
+    mutationFn: async (data: RegisterInputs) => Register(data),
+    onSuccess: () => {
+      reset();
+      router.push("/login");
+    },
+  });
 
   const onSubmit = async (data: RegisterInputs) => {
     if (!data.password) return;
     try {
-      await registerUser(data.name, data.email, data.password);
-      reset();
-      router.push("/login");
+      registerQuery.mutateAsync({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
     } catch (error) {
       console.error("Registration failed:", error);
     }
@@ -69,19 +78,17 @@ export default function RegisterForm() {
         error={errors.password}
       />
 
-      {auth.errors.length > 0 && (
+      {registerQuery.isError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
-          {auth.errors.map((err, idx) => (
-            <div key={idx}>{err}</div>
-          ))}
+          {registerQuery.error.message}
         </div>
       )}
       <button
         type="submit"
-        disabled={auth.isPending}
+        disabled={registerQuery.isPending}
         className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-60 cursor-pointer"
       >
-        {auth.isPending ? "Реєстрація..." : "Зареєструватися"}
+        {registerQuery.isPending ? "Реєстрація..." : "Зареєструватися"}
       </button>
     </form>
   );

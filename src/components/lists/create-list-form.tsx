@@ -5,18 +5,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FolderPlus } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createList } from "@/api/list/route";
+import { List, User } from "@/types/types";
 
-interface CreateListFormProps {
-  onCreateList: (name: string) => void;
-}
+export function CreateListForm() {
+  const [listTitle, setListTitle] = useState("");
+  const queryClient = useQueryClient();
+  const user = queryClient.getQueryData(["user"]) as User | undefined;
+  const mutateList = useMutation({
+    mutationFn: async ({
+      title,
+      ownerId,
+      participants,
+    }: {
+      title: string;
+      ownerId: string;
+      participants: List["participants"];
+    }) => createList({ title, ownerId, participants }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists"] });
+    },
+  });
+  // Если нет пользователя, не показывать форму
+  if (!user || !user.id) {
+    return null;
+  }
 
-export function CreateListForm({ onCreateList }: CreateListFormProps) {
-  const [newListName, setNewListName] = useState("");
-
-  const handleSubmit = () => {
-    if (newListName.trim() !== "") {
-      onCreateList(newListName.trim());
-      setNewListName("");
+  const handleSubmit = (title: string) => {
+    if (listTitle.trim() !== "") {
+      mutateList.mutate({
+        title,
+        ownerId: user.id,
+        participants: [{ userId: user.id, role: "admin" }],
+      });
+      setListTitle("");
     }
   };
 
@@ -32,17 +55,17 @@ export function CreateListForm({ onCreateList }: CreateListFormProps) {
         <div className="flex gap-2">
           <Input
             placeholder="Название списка..."
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
+            value={listTitle}
+            onChange={(e) => setListTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleSubmit();
+                handleSubmit(listTitle);
               }
             }}
             className="flex-1"
           />
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit(listTitle)}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />

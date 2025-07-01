@@ -5,54 +5,140 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { CreateTaskForm } from "@/components/tasks/Create-task-form";
 import { TaskItem } from "@/components/tasks/Task-item";
-import type { List, Task } from "@/types/types";
-import { useAuth } from "@/hooks/useAuth";
-import { useTask } from "@/hooks/useTask";
+import type { List, Task, User } from "@/types/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createTask, deleteTask, updateTask } from "@/api/task/route";
+import { useState } from "react";
 
 interface TasksViewProps {
   selectedList: List;
-  onBack: () => void;
   tasks: Task[];
-  isPending: boolean;
-  errors: string[];
 }
 
-export function TasksView({
-  selectedList,
-  onBack,
-  tasks,
-  isPending,
-  errors,
-}: TasksViewProps) {
-  const { handleCreateTask, handleDeleteTask, handleEditTask } = useTask();
-  const { auth } = useAuth();
+export function TasksView({ selectedList, tasks }: TasksViewProps) {
+  const queryClient = useQueryClient();
+  const user = queryClient.getQueryData(["user"]) as User | undefined;
+
+  // Track loading and error states for all mutations
+  const [errors, setErrors] = useState<string[]>([]);
+  const [isPending, setIsPending] = useState(false);
+
+  // Simple back navigation
+  const onBack = () => {
+    if (typeof window !== "undefined") {
+      window.history.back();
+    }
+  };
+
+  const handleDeleteTask = useMutation({
+    mutationFn: async (taskId: string) => await deleteTask(taskId),
+    onMutate: () => {
+      setIsPending(true);
+      setErrors([]);
+    },
+    onError: (error) => {
+      setErrors([error?.message || "Ошибка удаления задачи"]);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setIsPending(false);
+    },
+  });
+
+  const handleEditTask = useMutation({
+    mutationFn: async ({
+      taskId,
+      title,
+      description,
+      isCompleted,
+    }: {
+      taskId: string;
+      title?: string;
+      description?: string;
+      isCompleted?: boolean;
+    }) => await updateTask({ taskId, title, description, isCompleted }),
+    onMutate: () => {
+      setIsPending(true);
+      setErrors([]);
+    },
+    onError: (error) => {
+      setErrors([error?.message || "Ошибка обновления задачи"]);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setIsPending(false);
+    },
+  });
+
+  const handleTaskCreate = useMutation({
+    mutationFn: async (data: {
+      listId: string;
+      title: string;
+      description?: string;
+      isCompleted: boolean;
+      authorId: string;
+    }) => await createTask(data),
+    onMutate: () => {
+      setIsPending(true);
+      setErrors([]);
+    },
+    onError: (error) => {
+      setErrors([error?.message || "Ошибка создания задачи"]);
+      setIsPending(false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setIsPending(false);
+    },
+  });
 
   const onCreateTask = (title: string, description: string) => {
-    if (auth.id) {
-      handleCreateTask(title, description, selectedList.id, auth.id);
-    }
+    handleTaskCreate.mutate({
+      title,
+      description,
+      listId: selectedList.id,
+      authorId: user.id,
+      isCompleted: false,
+    });
   };
 
   const onToggleTask = (taskId: string) => {
     const taskToToggle = tasks.find((task) => task.id === taskId);
     if (taskToToggle) {
-      handleEditTask(taskId, undefined, undefined, !taskToToggle.isCompleted);
+      handleEditTask.mutate({
+        taskId,
+        title: taskToToggle.title,
+        description: taskToToggle.description,
+        isCompleted: !taskToToggle.isCompleted,
+      });
     }
   };
 
   const onDeleteTask = (taskId: string) => {
-    handleDeleteTask(taskId);
+    handleDeleteTask.mutate(taskId);
   };
 
   const onEditTask = (
     taskId: string,
     newTitle: string,
-    newDescription: string
+    newDescription: string,
+    isCompleted: boolean
   ) => {
-    handleEditTask(taskId, newTitle, newDescription, undefined);
+    handleEditTask.mutate({
+      taskId,
+      title: newTitle,
+      description: newDescription,
+      isCompleted,
+    });
   };
 
   const filteredTasks = tasks.filter((task) => task.listId === selectedList.id);
+
+  if (!user || !user.id) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -80,7 +166,7 @@ export function TasksView({
         <CreateTaskForm
           onCreateTask={onCreateTask}
           participants={selectedList.participants}
-          currentUserId={auth.id}
+          currentUserId={user.id}
         />
 
         <Card className="shadow-lg">
@@ -112,7 +198,7 @@ export function TasksView({
                     onToggle={onToggleTask}
                     onDelete={onDeleteTask}
                     onEdit={onEditTask}
-                    currentUserId={auth.id}
+                    currentUserId={user.id}
                   />
                 ))}
               </div>

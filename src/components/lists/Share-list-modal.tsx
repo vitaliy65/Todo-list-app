@@ -18,7 +18,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useList } from "@/hooks/useList";
+import { useMutation } from "@tanstack/react-query";
+import { shareList } from "@/api/list/route";
 
 interface ShareListModalProps {
   listId: string;
@@ -31,15 +32,26 @@ export default function ShareListModal({
 }: ShareListModalProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "viewer">("viewer");
-  const { handleShareList, errors } = useList();
+
+  const shareQuery = useMutation({
+    mutationFn: async ({
+      listId,
+      email,
+      role,
+    }: {
+      listId: string;
+      email: string;
+      role: "admin" | "viewer";
+    }) => shareList({ listId, email, role }),
+  });
 
   const handleSubmitShare = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await handleShareList(listId, email, role);
-    console.log(result.meta.requestStatus);
-    if (result.meta.requestStatus === "fulfilled") {
-      handleClose();
-    }
+    shareQuery.mutateAsync({
+      listId,
+      email,
+      role,
+    });
   };
 
   return (
@@ -87,18 +99,18 @@ export default function ShareListModal({
               </Select>
             </div>
           </div>
-          {errors.length > 0 && (
+          {shareQuery.isError && (
             <div className="text-red-500 text-sm text-center my-4">
-              {errors.map((error, index) => (
-                <p key={index}>{error}</p>
-              ))}
+              {shareQuery.error.message}
             </div>
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>
               Скасувати
             </Button>
-            <Button type="submit">Поділитися</Button>
+            <Button type="submit" disabled={shareQuery.isPending}>
+              {shareQuery.isPending ? "надсилання..." : "Поділитися"}
+            </Button>
           </div>
         </form>
       </DialogContent>
