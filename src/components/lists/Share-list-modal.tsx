@@ -18,8 +18,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "@tanstack/react-query";
-import { shareList } from "@/api/list/route";
+import useList from "@/hooks/List";
 
 interface ShareListModalProps {
   listId: string;
@@ -32,22 +31,16 @@ export default function ShareListModal({
 }: ShareListModalProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "viewer">("viewer");
-
-  const shareQuery = useMutation({
-    mutationFn: async ({
-      listId,
-      email,
-      role,
-    }: {
-      listId: string;
-      email: string;
-      role: "admin" | "viewer";
-    }) => shareList({ listId, email, role }),
-  });
+  const {
+    shareList,
+    isShareListError,
+    isShareListPending,
+    ShareListErrorMessage,
+  } = useList();
 
   const handleSubmitShare = async (e: React.FormEvent) => {
     e.preventDefault();
-    shareQuery.mutateAsync({
+    shareList({
       listId,
       email,
       role,
@@ -99,17 +92,17 @@ export default function ShareListModal({
               </Select>
             </div>
           </div>
-          {shareQuery.isError && (
+          {isShareListError && (
             <div className="text-red-500 text-sm text-center my-4">
-              {shareQuery.error.message}
+              {ShareListErrorMessage}
             </div>
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>
               Скасувати
             </Button>
-            <Button type="submit" disabled={shareQuery.isPending}>
-              {shareQuery.isPending ? "надсилання..." : "Поділитися"}
+            <Button type="submit" disabled={isShareListPending}>
+              {isShareListPending ? "надсилання..." : "Поділитися"}
             </Button>
           </div>
         </form>

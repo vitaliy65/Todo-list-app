@@ -2,8 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import FormInput from "../FormInput";
-import { Login } from "@/api/auth/route";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useUser from "@/hooks/User";
 
 interface LoginInputs {
   email: string;
@@ -11,15 +10,12 @@ interface LoginInputs {
 }
 
 export default function LoginForm() {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: async ({ email, password }: LoginInputs) =>
-      await Login({ email, password }),
-    onSuccess: () => {
-      console.log("User logged in successfully! ");
-      queryClient.invalidateQueries({ queryKey: ["user"], exact: true });
-    },
-  });
+  const {
+    loginMutation: login,
+    isLoginError,
+    isLoginPending,
+    loginErrorMessage,
+  } = useUser();
   const router = useRouter();
   const {
     register,
@@ -30,7 +26,7 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginInputs) => {
     try {
-      await mutation.mutateAsync(data);
+      await login(data);
       reset();
       router.push("/lists");
     } catch (error) {
@@ -60,17 +56,17 @@ export default function LoginForm() {
         register={register("password", { required: "Введіть пароль" })}
         error={errors.password}
       />
-      {mutation.isError && (
+      {isLoginError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
-          <div>{mutation.error.message}</div>
+          <div>{loginErrorMessage}</div>
         </div>
       )}
       <button
         type="submit"
-        disabled={mutation.isPending}
+        disabled={isLoginPending}
         className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-60"
       >
-        {mutation.isPending ? "Вхід..." : "Увійти"}
+        {isLoginPending ? "Вхід..." : "Увійти"}
       </button>
     </form>
   );

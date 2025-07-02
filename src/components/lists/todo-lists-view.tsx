@@ -3,19 +3,10 @@
 import { List as ListIcon } from "lucide-react";
 import { CreateListForm } from "./Create-list-form";
 import { TodoListCard } from "./Todo-lists-card";
-import { useQueryClient } from "@tanstack/react-query";
-import { List, User } from "@/types/types";
+import useList from "@/hooks/List";
 
 export function TodoListsView() {
-  const queryClient = useQueryClient();
-  const user = queryClient.getQueryData(["user"]) as User | undefined;
-  const lists = queryClient.getQueryData(["lists", user?.id]) as
-    | List[]
-    | undefined;
-
-  if (!user || !user.id) {
-    return null;
-  }
+  const { lists } = useList();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">

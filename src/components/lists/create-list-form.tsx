@@ -5,36 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, FolderPlus } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createList } from "@/api/list/route";
-import { List, User } from "@/types/types";
+import useList from "@/hooks/List";
+import useUser from "@/hooks/User";
 
 export function CreateListForm() {
   const [listTitle, setListTitle] = useState("");
-  const queryClient = useQueryClient();
-  const user = queryClient.getQueryData(["user"]) as User | undefined;
-  const mutateList = useMutation({
-    mutationFn: async ({
-      title,
-      ownerId,
-      participants,
-    }: {
-      title: string;
-      ownerId: string;
-      participants: List["participants"];
-    }) => createList({ title, ownerId, participants }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
-    },
-  });
-  // Если нет пользователя, не показывать форму
-  if (!user || !user.id) {
-    return null;
-  }
+  const { user } = useUser();
+  const { createNewList } = useList();
 
   const handleSubmit = (title: string) => {
     if (listTitle.trim() !== "") {
-      mutateList.mutate({
+      createNewList({
         title,
         ownerId: user.id,
         participants: [{ userId: user.id, role: "admin" }],

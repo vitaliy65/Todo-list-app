@@ -9,32 +9,18 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import ShareListModal from "./Share-list-modal";
 import { useRouter } from "next/navigation";
-import { deleteList, updateList } from "@/api/list/route";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import ListCardLoading from "./Todo-lists-card-loading";
+import useList from "@/hooks/List";
 
 export function TodoListCard({ list }: { list: List }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(list.title);
   const [openShareModel, setOpenShareModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {}, [isEditing]);
-
-  const queryClient = useQueryClient();
-  const updateListMutation = useMutation({
-    mutationFn: async ({ listId, title }: { listId: string; title: string }) =>
-      updateList({ listId, title }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
-    },
-  });
-
-  const deleteListMutation = useMutation({
-    mutationFn: async (listId: string) => deleteList(listId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
-    },
-  });
+  const { updateList, deleteList } = useList();
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -42,12 +28,13 @@ export function TodoListCard({ list }: { list: List }) {
 
   const handleSaveClick = () => {
     if (editedTitle.trim() !== "") {
-      updateListMutation.mutate({ listId: list.id, title: editedTitle.trim() });
+      updateList({ listId: list.id, title: editedTitle.trim() });
     }
     setIsEditing(false);
   };
 
   const handleSelectList = (listId: string) => {
+    setIsLoading(true);
     router.push(`/tasks/${listId}`);
   };
 
@@ -63,7 +50,7 @@ export function TodoListCard({ list }: { list: List }) {
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+      className="relative cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
       onClick={() => handleSelectList(list.id)}
     >
       <CardContent className="p-6">
@@ -123,7 +110,7 @@ export function TodoListCard({ list }: { list: List }) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteListMutation.mutate(list.id);
+                  deleteList(list.id);
                 }}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
@@ -151,6 +138,7 @@ export function TodoListCard({ list }: { list: List }) {
           />
         )}
       </CardContent>
+      {isLoading && <ListCardLoading />}
     </Card>
   );
 }

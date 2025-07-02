@@ -2,9 +2,9 @@
 
 import { TasksView } from "@/components/tasks/Tasks-view";
 import React from "react";
-import { getTasks } from "@/api/task/route";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { List, User } from "@/types/types";
+import { List } from "@/types/types";
+import useList from "@/hooks/List";
+import useTask from "@/hooks/Task";
 
 export default function TaskPage({
   params,
@@ -12,28 +12,19 @@ export default function TaskPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
-  const tasksQuery = useQuery({
-    queryKey: ["tasks"],
-    queryFn: async () => await getTasks(),
-  });
-  const queryClient = useQueryClient();
-  const user = queryClient.getQueryData(["user"]) as User;
-  const lists = queryClient.getQueryData(["lists", user.id]) as
-    | List[]
-    | undefined;
+  const { tasks, isTasksError, isTasksPending, tasksErrorMessage } = useTask();
+  const { lists } = useList();
   const selectedList = lists?.find((list: List) => list.id === id) as List;
 
-  if (tasksQuery.isLoading) {
+  if (isTasksPending) {
     return <div className="text-center p-8">Загрузка списка и задач...</div>;
   }
 
-  if (tasksQuery.isError) {
+  if (isTasksError) {
     return (
-      <div className="text-center p-8 text-red-500">
-        {tasksQuery.error.message}
-      </div>
+      <div className="text-center p-8 text-red-500">{tasksErrorMessage}</div>
     );
   }
 
-  return <TasksView selectedList={selectedList} tasks={tasksQuery.data} />;
+  return <TasksView selectedList={selectedList} tasks={tasks} />;
 }

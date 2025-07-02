@@ -4,8 +4,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import FormInput from "../FormInput";
-import { useMutation } from "@tanstack/react-query";
-import { Register } from "@/api/auth/route";
+import useUser from "@/hooks/User";
 
 interface RegisterInputs {
   name: string;
@@ -21,22 +20,23 @@ export default function RegisterForm() {
     reset,
   } = useForm<RegisterInputs>();
   const router = useRouter();
-  const registerQuery = useMutation({
-    mutationFn: async (data: RegisterInputs) => Register(data),
-    onSuccess: () => {
-      reset();
-      router.push("/login");
-    },
-  });
+  const {
+    registerMutation,
+    isRegisterError,
+    isRegisterPending,
+    registerErrorMessage,
+  } = useUser();
 
   const onSubmit = async (data: RegisterInputs) => {
     if (!data.password) return;
     try {
-      registerQuery.mutateAsync({
+      registerMutation({
         name: data.name,
         email: data.email,
         password: data.password,
       });
+      reset();
+      router.push("/login");
     } catch (error) {
       console.error("Registration failed:", error);
     }
@@ -78,17 +78,17 @@ export default function RegisterForm() {
         error={errors.password}
       />
 
-      {registerQuery.isError && (
+      {isRegisterError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
-          {registerQuery.error.message}
+          {registerErrorMessage}
         </div>
       )}
       <button
         type="submit"
-        disabled={registerQuery.isPending}
+        disabled={isRegisterPending}
         className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-60 cursor-pointer"
       >
-        {registerQuery.isPending ? "Реєстрація..." : "Зареєструватися"}
+        {isRegisterPending ? "Реєстрація..." : "Зареєструватися"}
       </button>
     </form>
   );
