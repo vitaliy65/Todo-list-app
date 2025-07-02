@@ -30,13 +30,16 @@ export default function RegisterForm() {
   const onSubmit = async (data: RegisterInputs) => {
     if (!data.password) return;
     try {
-      registerMutation({
+      await registerMutation({
         name: data.name,
         email: data.email,
         password: data.password,
       });
-      reset();
-      router.push("/login");
+
+      if (!isRegisterError) {
+        reset();
+        router.push("/login");
+      }
     } catch (error) {
       console.error("Registration failed:", error);
     }

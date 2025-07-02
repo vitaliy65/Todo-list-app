@@ -4,9 +4,15 @@ import { List as ListIcon } from "lucide-react";
 import { CreateListForm } from "./Create-list-form";
 import { TodoListCard } from "./Todo-lists-card";
 import useList from "@/hooks/List";
+import { useRouter } from "next/navigation";
 
 export function TodoListsView() {
-  const { lists } = useList();
+  const { lists, isListsError } = useList();
+  const router = useRouter();
+
+  if (isListsError) {
+    router.push("/login");
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">

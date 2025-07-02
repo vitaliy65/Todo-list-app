@@ -2,10 +2,7 @@ import React from "react";
 
 export default function Loading() {
   return (
-    <div
-      role="status"
-      className="flex justify-center items-center w-screen h-screen"
-    >
+    <div role="status" className="flex justify-center items-center">
       <svg
         aria-hidden="true"
         className="inline w-24 h-24 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
@@ -22,7 +19,6 @@ export default function Loading() {
           fill="currentFill"
         />
       </svg>
-      <span className="sr-only">Loading...</span>
     </div>
   );
 }

@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/lists");
+    router.push("/register");
   }, []);
 
   return null;

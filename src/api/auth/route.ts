@@ -31,7 +31,9 @@ export async function Register({
     });
     return { user: userCredential.user };
   } catch (error) {
-    return { error: error.message };
+    throw new Error(
+      `Registration failed: ${error.message.replace("Firebase: Error", "")}`
+    );
   }
 }
 
@@ -55,13 +57,13 @@ export async function Login({
       name: userCredential.user.displayName || "",
     };
     return loggedInUser;
-  } catch (error) {
-    return { error: error.message };
+  } catch {
+    throw new Error(`Login failed: неверный email или пароль`);
   }
 }
 
 export async function AuthUser() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const loggedInUser = {
@@ -71,7 +73,7 @@ export async function AuthUser() {
         };
         resolve(loggedInUser);
       } else {
-        resolve({ error: "User is not authenticated" });
+        reject(new Error("User is not authenticated"));
       }
     });
   });

@@ -27,7 +27,6 @@ export default function useUser() {
     mutationFn: async ({ email, password }: LoginInputs) =>
       await Login({ email, password }),
     onSuccess: () => {
-      console.log("User logged in successfully! ");
       queryClient.invalidateQueries({ queryKey: ["user"] });
     },
   });
