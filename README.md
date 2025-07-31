@@ -32,3 +32,7 @@
    - Viewer: Має право лише переглядати та позначати завдання як виконані або невиконані.
 
 React + TS + Tailwind + Firebase(Authentication + Firestore)
+
+<img width="1920" height="942" alt="изображение" src="https://github.com/user-attachments/assets/3c38e6ca-99a8-477f-a4f6-0b196eabce9a" />
+
+<img width="1920" height="954" alt="изображение" src="https://github.com/user-attachments/assets/77e7312e-36fa-4a47-a754-3c63fb602fa1" />
