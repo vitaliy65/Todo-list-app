@@ -36,7 +36,7 @@ export default function RegisterForm() {
         password: data.password,
       });
 
-      if (!isRegisterError) {
+      if (registerErrorMessage.length === 0) {
         reset();
         router.push("/login");
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { TasksView } from "@/components/tasks/Tasks-view";
+import { TasksView } from "../../../components/tasks/Tasks-view";
 import React from "react";
 import { List } from "@/types/types";
 import useList from "@/hooks/List";
